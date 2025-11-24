@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # CockroachDB - OLTP Database
+  cockroachdb:
+    image: cockroachdb/cockroach:latest
+    container_name: restman-cockroachdb
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"  # SQL port
+      - "8080:8080"    # Admin UI
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+    networks:
+      - restman-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper - Required for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: restman-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    networks:
+      - restman-network
+
+  # Kafka - Event Streaming
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: restman-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - restman-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Redis - Caching & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: restman-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - restman-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ClickHouse - Analytics Database
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: restman-clickhouse
+    ports:
+      - "8124:8123"  # HTTP port (changed to avoid conflict)
+      - "9001:9000"  # Native port (changed to avoid conflict)
+    environment:
+      CLICKHOUSE_DB: restman_analytics
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    networks:
+      - restman-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka UI - Optional but helpful for debugging
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: restman-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: restman-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9093
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - restman-network
+
+volumes:
+  cockroach-data:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  redis-data:
+  clickhouse-data:
+
+networks:
+  restman-network:
+    driver: bridge
+

@@ -1,0 +1,32 @@
+[package]
+name = "order-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+# Shared libraries
+models = { path = "../../shared/models" }
+error-handling = { path = "../../shared/error-handling" }
+db-utils = { path = "../../shared/db-utils" }
+kafka-client = { path = "../../shared/kafka-client" }
+
+# Workspace dependencies
+actix-web.workspace = true
+actix-rt.workspace = true
+actix-cors.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+redis.workspace = true
+rdkafka.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-actix-web.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+dotenvy.workspace = true
+validator.workspace = true
+config.workspace = true
