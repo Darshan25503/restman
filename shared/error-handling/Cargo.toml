@@ -12,4 +12,6 @@ tracing.workspace = true
 sqlx.workspace = true
 redis.workspace = true
 rdkafka.workspace = true
+validator.workspace = true
+anyhow.workspace = true
 

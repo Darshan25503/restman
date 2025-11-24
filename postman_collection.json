@@ -1,0 +1,176 @@
+{
+	"info": {
+		"_postman_id": "restman-auth-service",
+		"name": "RestMan - Auth Service",
+		"description": "Authentication service API for RestMan microservices platform. Supports OTP-based email authentication with session management.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/auth/health",
+					"host": ["{{base_url}}"],
+					"path": ["api", "auth", "health"]
+				},
+				"description": "Check if the auth service is healthy and running"
+			},
+			"response": []
+		},
+		{
+			"name": "Request OTP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has message\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql(\"OTP sent to your email\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"{{test_email}}\",\n  \"role\": \"user\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/auth/request-otp",
+					"host": ["{{base_url}}"],
+					"path": ["api", "auth", "request-otp"]
+				},
+				"description": "Request an OTP code to be sent to the specified email address. The OTP is valid for 5 minutes."
+			},
+			"response": []
+		},
+		{
+			"name": "Verify OTP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has token\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('token');",
+							"    pm.expect(jsonData).to.have.property('user_id');",
+							"    pm.expect(jsonData).to.have.property('email');",
+							"    pm.expect(jsonData).to.have.property('role');",
+							"    ",
+							"    // Save token for subsequent requests",
+							"    pm.environment.set(\"session_token\", jsonData.token);",
+							"    pm.environment.set(\"user_id\", jsonData.user_id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"{{test_email}}\",\n  \"code\": \"{{otp_code}}\",\n  \"role\": \"user\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/auth/verify-otp",
+					"host": ["{{base_url}}"],
+					"path": ["api", "auth", "verify-otp"]
+				},
+				"description": "Verify the OTP code and create a session. Returns a session token valid for 2 hours."
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success message\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql(\"Logged out successfully\");",
+							"});",
+							"",
+							"// Clear saved session token",
+							"pm.environment.unset(\"session_token\");",
+							"pm.environment.unset(\"user_id\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"session_id\": \"{{session_token}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/auth/logout",
+					"host": ["{{base_url}}"],
+					"path": ["api", "auth", "logout"]
+				},
+				"description": "Logout and delete the session from Redis"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8001",
+			"type": "string"
+		},
+		{
+			"key": "test_email",
+			"value": "test@example.com",
+			"type": "string"
+		},
+		{
+			"key": "otp_code",
+			"value": "123456",
+			"type": "string"
+		}
+	]
+}
+

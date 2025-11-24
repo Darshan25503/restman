@@ -122,6 +122,20 @@ impl From<redis::RedisError> for AppError {
     }
 }
 
+impl From<validator::ValidationErrors> for AppError {
+    fn from(err: validator::ValidationErrors) -> Self {
+        tracing::error!("Validation error: {:?}", err);
+        AppError::Validation(err.to_string())
+    }
+}
+
+impl From<anyhow::Error> for AppError {
+    fn from(err: anyhow::Error) -> Self {
+        tracing::error!("Anyhow error: {:?}", err);
+        AppError::Internal(err.to_string())
+    }
+}
+
 /// Convert rdkafka errors to AppError
 impl From<rdkafka::error::KafkaError> for AppError {
     fn from(err: rdkafka::error::KafkaError) -> Self {

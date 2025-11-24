@@ -5,8 +5,7 @@ use uuid::Uuid;
 use validator::Validate;
 
 /// User role enum
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
-#[sqlx(type_name = "text")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum UserRole {
     #[serde(rename = "user")]
@@ -15,6 +14,24 @@ pub enum UserRole {
     Rest,
     #[serde(rename = "kitch")]
     Kitch,
+}
+
+impl sqlx::Type<sqlx::Postgres> for UserRole {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        <String as sqlx::Type<sqlx::Postgres>>::type_info()
+    }
+}
+
+impl<'r> sqlx::Decode<'r, sqlx::Postgres> for UserRole {
+    fn decode(value: sqlx::postgres::PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s = <&str as sqlx::Decode<sqlx::Postgres>>::decode(value)?;
+        match s {
+            "user" => Ok(UserRole::User),
+            "rest" => Ok(UserRole::Rest),
+            "kitch" => Ok(UserRole::Kitch),
+            _ => Err(format!("invalid value \"{}\" for enum UserRole", s).into()),
+        }
+    }
 }
 
 impl std::fmt::Display for UserRole {
@@ -64,6 +81,7 @@ pub struct VerifyOtpRequest {
     pub email: String,
     #[validate(length(equal = 6, message = "OTP must be 6 digits"))]
     pub code: String,
+    pub role: UserRole,
 }
 
 /// Auth response
