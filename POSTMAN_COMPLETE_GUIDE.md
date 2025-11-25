@@ -1,0 +1,348 @@
+# RestMan Complete API - Postman Collection Guide
+
+## 📦 Overview
+
+This Postman collection provides complete API testing for the RestMan microservices platform, including:
+- **Auth Service** (Port 8001) - OTP-based authentication
+- **Restaurant Service** (Port 8002) - Restaurant and menu management
+
+## 🚀 Quick Start
+
+### 1. Import Files into Postman
+
+Import both files into Postman:
+1. **Collection**: `RestMan_Complete_API.postman_collection.json`
+2. **Environment**: `RestMan_Complete.postman_environment.json`
+
+### 2. Select Environment
+
+In Postman, select **"RestMan - Complete Environment"** from the environment dropdown (top-right corner).
+
+### 3. Update Your Email
+
+In the environment variables, change `user_email` to your actual email address:
+- Click the environment name
+- Edit `user_email` value
+- Save
+
+### 4. Start Testing!
+
+Follow the workflow below to test the complete system.
+
+---
+
+## 🔄 Complete Testing Workflow
+
+### Phase 1: Authentication
+
+#### Step 1: Request OTP
+- **Endpoint**: `Auth Service > Request OTP`
+- **Action**: Click "Send"
+- **Result**: OTP sent to your email (check inbox/spam)
+- **Note**: OTP is valid for 5 minutes
+
+#### Step 2: Verify OTP
+- **Endpoint**: `Auth Service > Verify OTP`
+- **Action**: 
+  1. Check your email for the 6-digit OTP
+  2. Update the request body with the OTP code
+  3. Click "Send"
+- **Result**: 
+  - Session token automatically saved to environment
+  - User ID automatically saved (used as Owner ID)
+- **Session**: Valid for 2 hours
+
+#### Step 3: Validate Session (Optional)
+- **Endpoint**: `Auth Service > Validate Session`
+- **Action**: Click "Send"
+- **Result**: Confirms session is valid
+
+---
+
+### Phase 2: Restaurant Management
+
+#### Step 4: Create Restaurant
+- **Endpoint**: `Restaurant Service > Restaurant Management > Create Restaurant`
+- **Action**: 
+  1. Ensure you're authenticated (user_id is set)
+  2. Modify restaurant details in request body if desired
+  3. Click "Send"
+- **Result**: 
+  - Restaurant created
+  - Restaurant ID automatically saved to environment
+- **Headers**: Uses `X-Owner-Id: {{user_id}}` for ownership
+
+#### Step 5: Get My Restaurants
+- **Endpoint**: `Restaurant Service > Restaurant Management > Get My Restaurants`
+- **Action**: Click "Send"
+- **Result**: List of all restaurants you own
+
+#### Step 6: Get Restaurant Details
+- **Endpoint**: `Restaurant Service > Restaurant Management > Get Restaurant Details`
+- **Action**: Click "Send"
+- **Result**: Full details of the restaurant
+- **Note**: This is a public endpoint (no auth required)
+
+---
+
+### Phase 3: Menu Categories
+
+#### Step 7: Create Category
+- **Endpoint**: `Restaurant Service > Category Management > Create Category`
+- **Action**: 
+  1. Modify category details if desired
+  2. Click "Send"
+- **Result**: 
+  - Category created
+  - Category ID automatically saved to environment
+
+#### Step 8: Update Category (Optional)
+- **Endpoint**: `Restaurant Service > Category Management > Update Category`
+- **Action**: Modify details and click "Send"
+
+---
+
+### Phase 4: Food Items
+
+#### Step 9: Create Food Item
+- **Endpoint**: `Restaurant Service > Food Management > Create Food Item`
+- **Action**: 
+  1. Modify food details if desired
+  2. Click "Send"
+- **Result**: 
+  - Food item created
+  - Food ID automatically saved to environment
+
+#### Step 10: Update Food Item (Optional)
+- **Endpoint**: `Restaurant Service > Food Management > Update Food Item`
+- **Action**: Modify details and click "Send"
+
+---
+
+### Phase 5: Menu Retrieval
+
+#### Step 11: Get Full Menu
+- **Endpoint**: `Restaurant Service > Menu > Get Full Menu`
+- **Action**: Click "Send"
+- **Result**: Complete menu with all categories and food items
+- **Note**: 
+  - This is a public endpoint (no auth required)
+  - Response is cached in Redis for 5 minutes
+  - Cache is invalidated on any menu update
+
+#### Step 12: Get Foods by IDs (Internal)
+- **Endpoint**: `Restaurant Service > Menu > Get Foods by IDs (Internal)`
+- **Action**: Click "Send"
+- **Result**: Food items by ID (used by Order Service)
+
+---
+
+### Phase 6: Cleanup (Optional)
+
+#### Delete Food Item
+- **Endpoint**: `Restaurant Service > Food Management > Delete Food Item`
+
+#### Delete Category
+- **Endpoint**: `Restaurant Service > Category Management > Delete Category`
+
+#### Delete Restaurant
+- **Endpoint**: `Restaurant Service > Restaurant Management > Delete Restaurant`
+- **Note**: This is a soft delete (sets is_active = false)
+
+#### Logout
+- **Endpoint**: `Auth Service > Logout`
+- **Result**: Session invalidated
+
+---
+
+## 📋 Environment Variables
+
+The environment automatically manages these variables:
+
+| Variable | Description | Auto-populated |
+|----------|-------------|----------------|
+| `auth_base_url` | Auth service URL | No (default: http://localhost:8001) |
+| `restaurant_base_url` | Restaurant service URL | No (default: http://localhost:8002) |
+| `user_email` | Your email for auth | No (you must set this) |
+| `session_token` | Session token from auth | Yes (after OTP verification) |
+| `user_id` | User ID (used as Owner ID) | Yes (after OTP verification) |
+| `restaurant_id` | Created restaurant ID | Yes (after creating restaurant) |
+| `category_id` | Created category ID | Yes (after creating category) |
+| `food_id` | Created food item ID | Yes (after creating food) |
+
+---
+
+## 🎯 Testing Tips
+
+### 1. Sequential Testing
+Follow the workflow in order - each step builds on the previous one.
+
+### 2. Check Console
+Open Postman Console (View > Show Postman Console) to see:
+- Auto-saved variables
+- Request/response logs
+- Debug information
+
+### 3. Ownership Verification
+All write operations (create, update, delete) verify ownership using the `X-Owner-Id` header.
+
+### 4. Caching Behavior
+The menu endpoint is cached in Redis:
+- **TTL**: 5 minutes (300 seconds)
+- **Cache Key**: `menu:{restaurant_id}`
+- **Invalidation**: Automatic on any menu update (restaurant, category, or food changes)
+- **Test**: Call "Get Full Menu" twice - second call should be faster (served from cache)
+
+### 5. Event Publishing
+All menu operations publish events to Kafka:
+- **Topic**: `menu.events`
+- **Events**: restaurant.created, restaurant.updated, menu.category_created, menu.food_created, etc.
+- **Check**: View Kafka UI at http://localhost:9021 to see events
+
+---
+
+## 🔍 API Endpoints Reference
+
+### Auth Service (Port 8001)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/auth/health` | Health check | No |
+| POST | `/api/auth/request-otp` | Request OTP via email | No |
+| POST | `/api/auth/verify-otp` | Verify OTP and get session | No |
+| POST | `/api/auth/validate` | Validate session token | No |
+| POST | `/api/auth/logout` | Invalidate session | No |
+
+### Restaurant Service (Port 8002)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/health` | Health check | No |
+| POST | `/api/restaurants` | Create restaurant | Yes (X-Owner-Id) |
+| GET | `/api/restaurants/my` | Get my restaurants | Yes (X-Owner-Id) |
+| GET | `/api/restaurants/{id}` | Get restaurant details | No |
+| PUT | `/api/restaurants/{id}` | Update restaurant | Yes (X-Owner-Id) |
+| DELETE | `/api/restaurants/{id}` | Delete restaurant | Yes (X-Owner-Id) |
+| POST | `/api/restaurants/{id}/categories` | Create category | Yes (X-Owner-Id) |
+| PUT | `/api/restaurants/{id}/categories/{cat_id}` | Update category | Yes (X-Owner-Id) |
+| DELETE | `/api/restaurants/{id}/categories/{cat_id}` | Delete category | Yes (X-Owner-Id) |
+| POST | `/api/restaurants/{id}/foods` | Create food item | Yes (X-Owner-Id) |
+| PUT | `/api/restaurants/{id}/foods/{food_id}` | Update food item | Yes (X-Owner-Id) |
+| DELETE | `/api/restaurants/{id}/foods/{food_id}` | Delete food item | Yes (X-Owner-Id) |
+| GET | `/api/restaurants/{id}/menu` | Get full menu | No |
+| GET | `/internal/foods?ids=...` | Get foods by IDs | No (internal) |
+
+---
+
+## 🐛 Troubleshooting
+
+### Issue: "Missing or invalid X-Owner-Id header"
+**Solution**: Make sure you've completed the authentication flow first. The `user_id` variable must be set.
+
+### Issue: "Restaurant not found or access denied"
+**Solution**: You can only modify restaurants you own. Check that the `restaurant_id` belongs to your `user_id`.
+
+### Issue: "OTP expired"
+**Solution**: OTPs are valid for 5 minutes. Request a new OTP and verify it quickly.
+
+### Issue: "Session expired"
+**Solution**: Sessions are valid for 2 hours. Re-authenticate by requesting and verifying a new OTP.
+
+### Issue: "Service unavailable"
+**Solution**:
+1. Check that Docker containers are running: `docker-compose ps`
+2. Check that services are running:
+   - Auth Service: `curl http://localhost:8001/api/auth/health`
+   - Restaurant Service: `curl http://localhost:8002/api/health`
+
+---
+
+## 📊 Example Responses
+
+### Create Restaurant Response
+```json
+{
+  "id": "742d1373-5e87-4211-9415-a87490777437",
+  "owner_id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Pizza Palace",
+  "description": "Best pizza in town",
+  "address": "123 Main St, New York, NY",
+  "phone": "+1-555-1234",
+  "is_active": true,
+  "created_at": "2025-11-25T06:48:01.435088Z",
+  "updated_at": "2025-11-25T06:48:01.435088Z"
+}
+```
+
+### Get Full Menu Response
+```json
+{
+  "restaurant": {
+    "id": "742d1373-5e87-4211-9415-a87490777437",
+    "name": "Pizza Palace",
+    "description": "Best pizza in town",
+    ...
+  },
+  "categories": [
+    {
+      "id": "cf5a9682-b199-481f-b0a3-a5067eab8626",
+      "name": "Pizzas",
+      "description": "Our delicious pizzas",
+      "display_order": 1,
+      "foods": [
+        {
+          "id": "62e3539c-2dbb-4c49-ae7b-3afb914a56f1",
+          "name": "Margherita Pizza",
+          "description": "Classic pizza with tomato sauce, mozzarella, and basil",
+          "price": "12.99",
+          "is_available": true,
+          ...
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## 🎓 Advanced Usage
+
+### Testing Cache Invalidation
+1. Get the menu (cached)
+2. Update a food item
+3. Get the menu again (cache invalidated, fresh data)
+
+### Testing Ownership
+1. Create a restaurant with one user
+2. Try to update it with a different `X-Owner-Id`
+3. Should receive "access denied" error
+
+### Bulk Testing
+Use Postman's Collection Runner to run all requests in sequence automatically.
+
+---
+
+## 📝 Notes
+
+- All timestamps are in UTC (ISO 8601 format)
+- Prices are stored as DECIMAL for precision
+- UUIDs are used for all IDs
+- Soft deletes are used for restaurants (is_active flag)
+- Hard deletes are used for categories and foods
+
+---
+
+## 🚀 Next Steps
+
+After testing the Restaurant Service, you can:
+1. Test the Order Service (coming in Phase 4)
+2. Test the Kitchen Service (coming in Phase 5)
+3. Test the Billing Service (coming in Phase 6)
+4. View analytics in ClickHouse
+
+---
+
+**Happy Testing! 🎉**
+
+
