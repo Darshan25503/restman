@@ -49,20 +49,41 @@ pub async fn publish_message<T: Serialize>(
     payload: &T,
 ) -> Result<(), anyhow::Error> {
     let payload_json = serde_json::to_string(payload)?;
-    
+
     let mut record = FutureRecord::to(topic).payload(&payload_json);
-    
+
     if let Some(k) = key {
         record = record.key(k);
     }
-    
+
     producer
         .send(record, Duration::from_secs(5))
         .await
         .map_err(|(err, _)| anyhow::anyhow!("Failed to send message: {}", err))?;
-    
+
     tracing::debug!("Published message to topic: {}", topic);
-    
+
+    Ok(())
+}
+
+/// Publish a raw string message to Kafka
+pub async fn publish(
+    producer: &FutureProducer,
+    topic: &str,
+    key: &str,
+    payload: &str,
+) -> Result<(), rdkafka::error::KafkaError> {
+    let record = FutureRecord::to(topic)
+        .key(key)
+        .payload(payload);
+
+    producer
+        .send(record, Duration::from_secs(5))
+        .await
+        .map_err(|(err, _)| err)?;
+
+    tracing::debug!("Published message to topic: {}", topic);
+
     Ok(())
 }
 

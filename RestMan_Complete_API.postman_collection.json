@@ -355,6 +355,280 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{order_base_url}}/api/health",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Check if the order service is healthy"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('order_id', jsonData.id);",
+                  "    console.log('Order created with ID: ' + jsonData.id);",
+                  "    console.log('Total amount: ' + jsonData.total_amount);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}",
+                "description": "User ID from auth service"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurant_id\": \"{{restaurant_id}}\",\n  \"items\": [\n    {\n      \"food_id\": \"{{food_id}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"delivery_address\": \"123 Main St, Apt 4B, New York, NY 10001\",\n  \"special_instructions\": \"Extra cheese please, ring doorbell twice\"\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/api/orders",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Create a new order with food items"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}",
+                "description": "User ID from auth service"
+              }
+            ],
+            "url": {
+              "raw": "{{order_base_url}}/api/orders/{{order_id}}",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": "Get details of a specific order including items"
+          },
+          "response": []
+        },
+        {
+          "name": "List User Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}",
+                "description": "User ID from auth service"
+              }
+            ],
+            "url": {
+              "raw": "{{order_base_url}}/api/orders",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Get all orders for the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status - Accept",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            },
+            "description": "Update order status to ACCEPTED (restaurant accepts the order)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status - In Progress",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            },
+            "description": "Update order status to IN_PROGRESS (kitchen is preparing)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status - Ready",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"READY\"\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            },
+            "description": "Update order status to READY (order is ready for pickup/delivery)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status - Completed",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            },
+            "description": "Update order status to COMPLETED (order delivered/picked up)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status - Cancelled",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{order_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            },
+            "description": "Update order status to CANCELLED (order cancelled by user or restaurant)"
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

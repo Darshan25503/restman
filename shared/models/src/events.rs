@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
     billing::PaymentMethod,
-    order::{OrderStatus, OrderType},
     user::UserRole,
 };
 
@@ -80,9 +80,10 @@ pub type MenuFoodCreatedEvent = Event<MenuFoodCreatedData>;
 pub struct OrderItemData {
     pub food_id: Uuid,
     pub food_name: String,
-    pub quantity: i32,
-    pub unit_price: f64,
-    pub line_total: f64,
+    pub food_description: Option<String>,
+    pub quantity: i64,
+    pub unit_price: Decimal,
+    pub subtotal: Decimal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,9 +91,9 @@ pub struct OrderPlacedData {
     pub order_id: Uuid,
     pub user_id: Uuid,
     pub restaurant_id: Uuid,
-    pub order_type: OrderType,
-    pub total_price: f64,
+    pub total_amount: Decimal,
     pub items: Vec<OrderItemData>,
+    pub delivery_address: Option<String>,
     pub special_instructions: Option<String>,
     pub placed_at: DateTime<Utc>,
 }
@@ -101,8 +102,8 @@ pub struct OrderPlacedData {
 pub struct OrderStatusUpdatedData {
     pub order_id: Uuid,
     pub restaurant_id: Uuid,
-    pub old_status: OrderStatus,
-    pub new_status: OrderStatus,
+    pub old_status: String,
+    pub new_status: String,
     pub updated_at: DateTime<Utc>,
 }
 

@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use crate::order::OrderType;
-
 /// Kitchen ticket status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
 #[sqlx(type_name = "text")]
@@ -35,8 +33,7 @@ pub struct KitchenTicket {
     pub id: Uuid,
     pub order_id: Uuid,
     pub restaurant_id: Uuid,
-    pub order_type: OrderType,
-    pub status: KitchenTicketStatus,
+    pub status: String,
     pub special_instructions: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

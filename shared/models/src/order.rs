@@ -1,28 +1,9 @@
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 use validator::Validate;
-
-/// Order type enum
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
-#[sqlx(type_name = "text")]
-#[serde(rename_all = "snake_case")]
-pub enum OrderType {
-    DineIn,
-    Takeaway,
-    Delivery,
-}
-
-impl std::fmt::Display for OrderType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            OrderType::DineIn => write!(f, "dine_in"),
-            OrderType::Takeaway => write!(f, "takeaway"),
-            OrderType::Delivery => write!(f, "delivery"),
-        }
-    }
-}
 
 /// Order status enum
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
@@ -56,12 +37,10 @@ pub struct Order {
     pub id: Uuid,
     pub user_id: Uuid,
     pub restaurant_id: Uuid,
-    pub order_type: OrderType,
-    pub status: OrderStatus,
-    pub total_price: f64,
+    pub status: String,
+    pub total_amount: Decimal,
+    pub delivery_address: Option<String>,
     pub special_instructions: Option<String>,
-    pub placed_at: DateTime<Utc>,
-    pub completed_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -73,27 +52,28 @@ pub struct OrderItem {
     pub order_id: Uuid,
     pub food_id: Uuid,
     pub food_name: String,
-    pub quantity: i32,
-    pub unit_price: f64,
-    pub line_total: f64,
+    pub food_description: Option<String>,
+    pub quantity: i64,
+    pub unit_price: Decimal,
+    pub subtotal: Decimal,
     pub created_at: DateTime<Utc>,
 }
 
 /// Create order item request
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct CreateOrderItemRequest {
     pub food_id: Uuid,
     #[validate(range(min = 1, max = 100))]
-    pub quantity: i32,
+    pub quantity: i64,
 }
 
 /// Create order request
 #[derive(Debug, Deserialize, Validate)]
 pub struct CreateOrderRequest {
     pub restaurant_id: Uuid,
-    pub order_type: OrderType,
     #[validate(length(min = 1))]
     pub items: Vec<CreateOrderItemRequest>,
+    pub delivery_address: Option<String>,
     pub special_instructions: Option<String>,
 }
 
@@ -106,8 +86,28 @@ pub struct OrderResponse {
 }
 
 /// Update order status request
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct UpdateOrderStatusRequest {
-    pub status: OrderStatus,
+    #[validate(length(min = 1))]
+    pub status: String,
+}
+
+/// Food details from Restaurant Service
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FoodDetails {
+    pub id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub price: Decimal,
+    pub is_available: bool,
+    // Extra fields from Restaurant Service (ignored for order processing)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub restaurant_id: Option<Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category_id: Option<Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<DateTime<Utc>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<DateTime<Utc>>,
 }
 

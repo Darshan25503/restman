@@ -5,6 +5,7 @@
 This Postman collection provides complete API testing for the RestMan microservices platform, including:
 - **Auth Service** (Port 8001) - OTP-based authentication
 - **Restaurant Service** (Port 8002) - Restaurant and menu management
+- **Order Service** (Port 8003) - Order placement and tracking
 
 ## 🚀 Quick Start
 
@@ -137,7 +138,52 @@ Follow the workflow below to test the complete system.
 
 ---
 
-### Phase 6: Cleanup (Optional)
+### Phase 6: Order Management
+
+#### Step 13: Create Order
+- **Endpoint**: `Order Service > Create Order`
+- **Action**:
+  1. Ensure you have completed authentication (session_token set)
+  2. Ensure you have created a restaurant and food items
+  3. Click "Send"
+- **Result**:
+  - Order created with status "PLACED"
+  - Order ID automatically saved to environment
+  - Total amount calculated from food prices
+  - Kafka event `order.placed` published
+- **Note**:
+  - Uses `user_id` from auth verification
+  - Uses `restaurant_id` and `food_id` from previous steps
+  - Fetches current food prices from Restaurant Service
+
+#### Step 14: Get Order Details
+- **Endpoint**: `Order Service > Get Order Details`
+- **Action**: Click "Send"
+- **Result**: Complete order details with items
+
+#### Step 15: List User Orders
+- **Endpoint**: `Order Service > List User Orders`
+- **Action**: Click "Send"
+- **Result**: All orders for the authenticated user
+
+#### Step 16: Update Order Status
+- **Endpoints**:
+  - `Order Service > Update Order Status - Accept` (PLACED → ACCEPTED)
+  - `Order Service > Update Order Status - In Progress` (ACCEPTED → IN_PROGRESS)
+  - `Order Service > Update Order Status - Ready` (IN_PROGRESS → READY)
+  - `Order Service > Update Order Status - Completed` (READY → COMPLETED)
+  - `Order Service > Update Order Status - Cancelled` (Any → CANCELLED)
+- **Action**: Click "Send" on each endpoint in sequence
+- **Result**:
+  - Order status updated
+  - Kafka event `order.status_updated` published
+- **Note**:
+  - Status transitions are validated
+  - Invalid transitions will return 400 error
+
+---
+
+### Phase 7: Cleanup (Optional)
 
 #### Delete Food Item
 - **Endpoint**: `Restaurant Service > Food Management > Delete Food Item`
@@ -163,12 +209,14 @@ The environment automatically manages these variables:
 |----------|-------------|----------------|
 | `auth_base_url` | Auth service URL | No (default: http://localhost:8001) |
 | `restaurant_base_url` | Restaurant service URL | No (default: http://localhost:8002) |
+| `order_base_url` | Order service URL | No (default: http://localhost:8003) |
 | `user_email` | Your email for auth | No (you must set this) |
 | `session_token` | Session token from auth | Yes (after OTP verification) |
 | `user_id` | User ID (used as Owner ID) | Yes (after OTP verification) |
 | `restaurant_id` | Created restaurant ID | Yes (after creating restaurant) |
 | `category_id` | Created category ID | Yes (after creating category) |
 | `food_id` | Created food item ID | Yes (after creating food) |
+| `order_id` | Created order ID | Yes (after creating order) |
 
 ---
 
@@ -194,10 +242,24 @@ The menu endpoint is cached in Redis:
 - **Test**: Call "Get Full Menu" twice - second call should be faster (served from cache)
 
 ### 5. Event Publishing
-All menu operations publish events to Kafka:
-- **Topic**: `menu.events`
-- **Events**: restaurant.created, restaurant.updated, menu.category_created, menu.food_created, etc.
-- **Check**: View Kafka UI at http://localhost:9021 to see events
+All operations publish events to Kafka:
+- **Menu Events**:
+  - **Topic**: `menu.events`
+  - **Events**: restaurant.created, restaurant.updated, menu.category_created, menu.food_created, etc.
+- **Order Events**:
+  - **Topic**: `order.events`
+  - **Events**: order.placed, order.status_updated
+- **Check**: View Kafka UI at http://localhost:8080 to see events
+
+### 6. Order Status Flow
+Orders follow a specific status flow:
+```
+PLACED → ACCEPTED → IN_PROGRESS → READY → COMPLETED
+                                        ↓
+                                   CANCELLED
+```
+- Invalid transitions will return a 400 error
+- Example: Cannot go from PLACED directly to COMPLETED
 
 ---
 
@@ -232,6 +294,18 @@ All menu operations publish events to Kafka:
 | GET | `/api/restaurants/{id}/menu` | Get full menu | No |
 | GET | `/internal/foods?ids=...` | Get foods by IDs | No (internal) |
 
+### Order Service (Port 8003)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/health` | Health check | No |
+| POST | `/api/orders` | Create new order | Yes (X-User-Id) |
+| GET | `/api/orders/{id}` | Get order details | Yes (X-User-Id) |
+| GET | `/api/orders` | List user's orders | Yes (X-User-Id) |
+| PATCH | `/api/orders/{id}/status` | Update order status | No |
+
+**Order Status Values**: `PLACED`, `ACCEPTED`, `IN_PROGRESS`, `READY`, `COMPLETED`, `CANCELLED`
+
 ---
 
 ## 🐛 Troubleshooting
@@ -254,6 +328,16 @@ All menu operations publish events to Kafka:
 2. Check that services are running:
    - Auth Service: `curl http://localhost:8001/api/auth/health`
    - Restaurant Service: `curl http://localhost:8002/api/health`
+   - Order Service: `curl http://localhost:8003/api/health`
+
+### Issue: "Invalid status transition"
+**Solution**: Orders must follow the valid status flow. Check the current order status and ensure you're transitioning to a valid next status.
+
+### Issue: "Food not available"
+**Solution**: The food item must have `is_available = true` in the Restaurant Service. Update the food item to make it available.
+
+### Issue: "External service error"
+**Solution**: Order Service depends on Restaurant Service. Ensure Restaurant Service is running and accessible at http://localhost:8002.
 
 ---
 
