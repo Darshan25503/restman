@@ -2,9 +2,11 @@ use actix_web::{web, HttpResponse};
 use error_handling::AppResult;
 use models::user::{RequestOtpRequest, VerifyOtpRequest};
 use serde::Deserialize;
+use uuid::Uuid;
 use validator::Validate;
 
 use crate::application::AuthService;
+use crate::infrastructure::repository::UserRepository;
 
 /// Request OTP handler
 pub async fn request_otp(
@@ -72,5 +74,25 @@ pub async fn health_check() -> HttpResponse {
         "status": "healthy",
         "service": "auth-service"
     }))
+}
+
+/// Internal endpoint to get user by ID
+/// GET /internal/users/{id}
+pub async fn get_user_by_id(
+    user_repo: web::Data<UserRepository>,
+    path: web::Path<Uuid>,
+) -> AppResult<HttpResponse> {
+    let user_id = path.into_inner();
+
+    let user = user_repo
+        .find_by_id(user_id)
+        .await?
+        .ok_or_else(|| error_handling::AppError::NotFound(format!("User not found: {}", user_id)))?;
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "id": user.id,
+        "email": user.email,
+        "role": user.role
+    })))
 }
 

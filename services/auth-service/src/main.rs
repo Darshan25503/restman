@@ -35,13 +35,9 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to create database pool");
 
-    // Run migrations (with locking disabled for CockroachDB compatibility)
-    tracing::info!("Running database migrations...");
-    sqlx::migrate!("./migrations")
-        .set_locking(false)
-        .run(&db_pool)
-        .await
-        .expect("Failed to run migrations");
+    // Migrations are run manually to avoid conflicts with shared _sqlx_migrations table
+    // The auth schema and users table are created manually
+    tracing::info!("Skipping migrations (run manually)");
 
     // Create Redis connection
     let redis_conn = db_utils::create_redis_client(&config.redis.url)
@@ -54,6 +50,7 @@ async fn main() -> std::io::Result<()> {
 
     // Create infrastructure components
     let user_repo = UserRepository::new(db_pool.clone());
+    let user_repo_data = web::Data::new(user_repo.clone());
     let session_store = SessionStore::new(redis_conn, config.session.expiry_seconds);
     let email_service = EmailService::new(&config.smtp).expect("Failed to create email service");
     let event_publisher = EventPublisher::new(KafkaProducer::new(kafka_producer));
@@ -85,6 +82,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(tracing_actix_web::TracingLogger::default())
             .app_data(auth_service_data.clone())
+            .app_data(user_repo_data.clone())
             .configure(presentation::configure_routes)
     })
     .bind((server_host.as_str(), server_port))?

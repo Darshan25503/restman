@@ -30,3 +30,5 @@ thiserror.workspace = true
 dotenvy.workspace = true
 validator.workspace = true
 config.workspace = true
+lettre.workspace = true
+reqwest.workspace = true

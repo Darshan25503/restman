@@ -629,6 +629,237 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Kitchen Service",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/health",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Check if the kitchen service is healthy"
+          },
+          "response": []
+        },
+        {
+          "name": "List All Kitchen Tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/kitchen/tickets",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "tickets"
+              ]
+            },
+            "description": "Get all kitchen tickets"
+          },
+          "response": []
+        },
+        {
+          "name": "List Kitchen Tickets by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/kitchen/tickets?status=NEW",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "NEW",
+                  "description": "Filter by status: NEW, ACCEPTED, IN_PROGRESS, READY, DELIVERED_TO_SERVICE"
+                }
+              ]
+            },
+            "description": "Get kitchen tickets filtered by status"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Kitchen Ticket by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const ticket = pm.response.json();",
+                  "    pm.environment.set('kitchen_ticket_id', ticket.id);",
+                  "    console.log('Kitchen ticket ID saved:', ticket.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "tickets",
+                "{{kitchen_ticket_id}}"
+              ]
+            },
+            "description": "Get a specific kitchen ticket by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ticket Status - ACCEPTED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "tickets",
+                "{{kitchen_ticket_id}}",
+                "status"
+              ]
+            },
+            "description": "Accept the kitchen ticket (NEW → ACCEPTED)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ticket Status - IN_PROGRESS",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "tickets",
+                "{{kitchen_ticket_id}}",
+                "status"
+              ]
+            },
+            "description": "Start preparing the order (ACCEPTED → IN_PROGRESS)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ticket Status - READY",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"READY\"\n}"
+            },
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "tickets",
+                "{{kitchen_ticket_id}}",
+                "status"
+              ]
+            },
+            "description": "Mark order as ready (IN_PROGRESS → READY). This triggers an email notification to the user."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ticket Status - DELIVERED_TO_SERVICE",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED_TO_SERVICE\"\n}"
+            },
+            "url": {
+              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "host": [
+                "{{kitchen_base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "tickets",
+                "{{kitchen_ticket_id}}",
+                "status"
+              ]
+            },
+            "description": "Mark order as delivered to delivery service (READY → DELIVERED_TO_SERVICE)"
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

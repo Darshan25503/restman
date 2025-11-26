@@ -9,6 +9,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
             .route("/request-otp", web::post().to(handlers::request_otp))
             .route("/verify-otp", web::post().to(handlers::verify_otp))
             .route("/logout", web::post().to(handlers::logout)),
+    )
+    .service(
+        web::scope("/internal")
+            .route("/users/{id}", web::get().to(handlers::get_user_by_id)),
     );
 }
 

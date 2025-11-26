@@ -6,6 +6,7 @@ This Postman collection provides complete API testing for the RestMan microservi
 - **Auth Service** (Port 8001) - OTP-based authentication
 - **Restaurant Service** (Port 8002) - Restaurant and menu management
 - **Order Service** (Port 8003) - Order placement and tracking
+- **Kitchen Service** (Port 8004) - Kitchen ticket management and email notifications
 
 ## 🚀 Quick Start
 
@@ -417,13 +418,123 @@ Use Postman's Collection Runner to run all requests in sequence automatically.
 
 ---
 
+---
+
+## 🍳 Phase 4: Kitchen Service
+
+The Kitchen Service manages kitchen tickets and sends email notifications when orders are ready.
+
+### Step 1: Check Kitchen Service Health
+- **Endpoint**: `Kitchen Service > Health Check`
+- **Action**: Click "Send"
+- **Result**: Returns service status
+
+### Step 2: List All Kitchen Tickets
+- **Endpoint**: `Kitchen Service > List All Kitchen Tickets`
+- **Action**: Click "Send"
+- **Result**: Returns all kitchen tickets
+- **Note**: Tickets are automatically created when orders are placed (via Kafka events)
+
+### Step 3: Filter Tickets by Status
+- **Endpoint**: `Kitchen Service > List Kitchen Tickets by Status`
+- **Action**:
+  1. Modify the `status` query parameter (NEW, ACCEPTED, IN_PROGRESS, READY, DELIVERED_TO_SERVICE)
+  2. Click "Send"
+- **Result**: Returns filtered tickets
+
+### Step 4: Get Specific Kitchen Ticket
+- **Endpoint**: `Kitchen Service > Get Kitchen Ticket by ID`
+- **Action**:
+  1. Set `kitchen_ticket_id` in environment (or it will be auto-populated)
+  2. Click "Send"
+- **Result**: Returns ticket details
+- **Auto-saved**: `kitchen_ticket_id`
+
+### Step 5: Update Ticket Status - Accept Order
+- **Endpoint**: `Kitchen Service > Update Ticket Status - ACCEPTED`
+- **Action**: Click "Send"
+- **Result**: Ticket status changes from NEW → ACCEPTED
+- **Note**: Publishes `order.status_updated` event to Kafka
+
+### Step 6: Update Ticket Status - Start Preparation
+- **Endpoint**: `Kitchen Service > Update Ticket Status - IN_PROGRESS`
+- **Action**: Click "Send"
+- **Result**: Ticket status changes from ACCEPTED → IN_PROGRESS
+
+### Step 7: Update Ticket Status - Mark as Ready (Triggers Email!)
+- **Endpoint**: `Kitchen Service > Update Ticket Status - READY`
+- **Action**: Click "Send"
+- **Result**:
+  - Ticket status changes from IN_PROGRESS → READY
+  - **Email notification sent to user** 📧
+  - Email includes order ID and restaurant name
+- **Note**: Check the user's email inbox for the notification!
+
+### Step 8: Update Ticket Status - Delivered to Service
+- **Endpoint**: `Kitchen Service > Update Ticket Status - DELIVERED_TO_SERVICE`
+- **Action**: Click "Send"
+- **Result**: Ticket status changes from READY → DELIVERED_TO_SERVICE
+
+---
+
+## 📧 Email Notification Feature
+
+When a kitchen ticket status is updated to **READY**, the system automatically:
+1. Fetches the user's email from the Auth Service
+2. Sends an HTML email notification with:
+   - Subject: "Your Order is Ready!"
+   - Order ID
+   - Restaurant name
+   - Professional HTML formatting
+3. Email is sent asynchronously (doesn't block the API response)
+
+**To test email notifications:**
+1. Make sure SMTP is configured in the `.env` file
+2. Create an order (Order Service)
+3. Wait for kitchen ticket to be created automatically
+4. Update ticket status through the workflow: NEW → ACCEPTED → IN_PROGRESS → READY
+5. Check the user's email inbox for the notification
+
+---
+
+## 🔄 Complete End-to-End Workflow
+
+Here's the complete flow from authentication to order delivery:
+
+1. **Auth Service**: Request OTP → Verify OTP (get session token)
+2. **Restaurant Service**: Create Restaurant → Create Category → Create Food Item
+3. **Order Service**: Create Order (auto-saves order_id)
+4. **Kitchen Service** (automatic): Kitchen ticket created via Kafka event
+5. **Kitchen Service**: Accept ticket (NEW → ACCEPTED)
+6. **Kitchen Service**: Start preparation (ACCEPTED → IN_PROGRESS)
+7. **Kitchen Service**: Mark as ready (IN_PROGRESS → READY) → **Email sent!** 📧
+8. **Kitchen Service**: Deliver to service (READY → DELIVERED_TO_SERVICE)
+
+---
+
+## 📊 Environment Variables
+
+The collection uses these auto-populated variables:
+
+| Variable | Description | Auto-populated By |
+|----------|-------------|-------------------|
+| `session_token` | Authentication token | Verify OTP |
+| `user_id` | User UUID | Verify OTP |
+| `restaurant_id` | Restaurant UUID | Create Restaurant |
+| `category_id` | Category UUID | Create Category |
+| `food_id` | Food item UUID | Create Food Item |
+| `order_id` | Order UUID | Create Order |
+| `kitchen_ticket_id` | Kitchen ticket UUID | Get Kitchen Ticket |
+
+---
+
 ## 🚀 Next Steps
 
-After testing the Restaurant Service, you can:
-1. Test the Order Service (coming in Phase 4)
-2. Test the Kitchen Service (coming in Phase 5)
-3. Test the Billing Service (coming in Phase 6)
-4. View analytics in ClickHouse
+After testing the Kitchen Service, you can:
+1. Test the Billing Service (coming in Phase 6)
+2. View Kafka events in Kafka UI (http://localhost:8080)
+3. View analytics in ClickHouse
+4. Monitor email delivery logs
 
 ---
 

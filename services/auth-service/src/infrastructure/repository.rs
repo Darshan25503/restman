@@ -4,6 +4,7 @@ use models::user::{User, UserRole};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct UserRepository {
     pool: PgPool,
 }
@@ -23,6 +24,22 @@ impl UserRepository {
             "#,
         )
         .bind(email)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(user)
+    }
+
+    /// Find user by ID
+    pub async fn find_by_id(&self, user_id: Uuid) -> AppResult<Option<User>> {
+        let user = sqlx::query_as::<_, User>(
+            r#"
+            SELECT id, email, role, is_active, last_verified_at, created_at, updated_at
+            FROM auth.users
+            WHERE id = $1
+            "#,
+        )
+        .bind(user_id)
         .fetch_optional(&self.pool)
         .await?;
 
