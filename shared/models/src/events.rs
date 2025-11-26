@@ -120,8 +120,10 @@ pub struct BillGeneratedData {
     pub order_id: Uuid,
     pub restaurant_id: Uuid,
     pub user_id: Uuid,
-    pub total_amount: f64,
-    pub final_amount: f64,
+    pub subtotal: Decimal,
+    pub tax_amount: Decimal,
+    pub discount_amount: Decimal,
+    pub total_amount: Decimal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -130,7 +132,7 @@ pub struct BillPaidData {
     pub order_id: Uuid,
     pub restaurant_id: Uuid,
     pub user_id: Uuid,
-    pub final_amount: f64,
+    pub total_amount: Decimal,
     pub payment_method: PaymentMethod,
     pub paid_at: DateTime<Utc>,
 }

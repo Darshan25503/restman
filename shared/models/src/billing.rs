@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 /// Bill status enum
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
-#[sqlx(type_name = "text")]
+#[sqlx(type_name = "varchar", rename_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum BillStatus {
     Pending,
@@ -25,7 +25,7 @@ impl std::fmt::Display for BillStatus {
 
 /// Payment method enum
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
-#[sqlx(type_name = "text")]
+#[sqlx(type_name = "varchar", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum PaymentMethod {
     Cash,
@@ -48,14 +48,15 @@ impl std::fmt::Display for PaymentMethod {
 pub struct Bill {
     pub id: Uuid,
     pub order_id: Uuid,
-    pub restaurant_id: Uuid,
     pub user_id: Uuid,
-    pub total_amount: f64,
-    pub tax_amount: f64,
-    pub discount_amount: f64,
-    pub final_amount: f64,
+    pub restaurant_id: Uuid,
+    pub subtotal: rust_decimal::Decimal,
+    pub tax_amount: rust_decimal::Decimal,
+    pub discount_amount: rust_decimal::Decimal,
+    pub total_amount: rust_decimal::Decimal,
     pub status: BillStatus,
     pub payment_method: Option<PaymentMethod>,
+    pub generated_at: DateTime<Utc>,
     pub paid_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

@@ -7,6 +7,7 @@ This Postman collection provides complete API testing for the RestMan microservi
 - **Restaurant Service** (Port 8002) - Restaurant and menu management
 - **Order Service** (Port 8003) - Order placement and tracking
 - **Kitchen Service** (Port 8004) - Kitchen ticket management and email notifications
+- **Billing Service** (Port 8005) - Bill generation and payment processing
 
 ## 🚀 Quick Start
 
@@ -497,18 +498,72 @@ When a kitchen ticket status is updated to **READY**, the system automatically:
 
 ---
 
+## 💰 Phase 6: Billing Service
+
+The Billing Service automatically generates bills when orders are placed and handles payment processing.
+
+### How It Works (Automatic)
+
+When you create an order in the Order Service:
+1. Order Service publishes `order.placed` event to Kafka
+2. **Billing Service automatically consumes the event**
+3. **Bill is automatically created** with:
+   - Subtotal from order
+   - 10% tax calculated automatically
+   - Total amount = subtotal + tax
+   - Status: PENDING
+4. Billing Service publishes `bill.generated` event to Kafka
+
+### Step 1: Get Bill by Order ID
+- **Endpoint**: `Billing Service > Get Bill by Order ID`
+- **Action**: Click "Send"
+- **Result**:
+  - Returns bill details for the order
+  - Bill ID automatically saved to environment
+- **Note**: Bill is created automatically when order is placed
+
+### Step 2: Finalize Bill (Mark as Paid)
+- **Endpoint**: `Billing Service > Finalize Bill (Mark as Paid)`
+- **Action**:
+  1. Optionally change payment method in request body (card/cash/upi)
+  2. Click "Send"
+- **Result**:
+  - Bill status changes from PENDING → PAID
+  - Payment method recorded
+  - `paid_at` timestamp set
+  - Publishes `bill.paid` event to Kafka
+
+### Step 3: Get User Bills
+- **Endpoint**: `Billing Service > Get User Bills`
+- **Action**: Click "Send"
+- **Result**: Returns all bills for the authenticated user
+
+### Step 4: Get Restaurant Bills
+- **Endpoint**: `Billing Service > Get Restaurant Bills`
+- **Action**: Click "Send"
+- **Result**: Returns all bills for the restaurant
+
+### Step 5: Health Check
+- **Endpoint**: `Billing Service > Health Check`
+- **Action**: Click "Send"
+- **Result**: Confirms billing service is running
+
+---
+
 ## 🔄 Complete End-to-End Workflow
 
-Here's the complete flow from authentication to order delivery:
+Here's the complete flow from authentication to order delivery and payment:
 
 1. **Auth Service**: Request OTP → Verify OTP (get session token)
 2. **Restaurant Service**: Create Restaurant → Create Category → Create Food Item
 3. **Order Service**: Create Order (auto-saves order_id)
-4. **Kitchen Service** (automatic): Kitchen ticket created via Kafka event
-5. **Kitchen Service**: Accept ticket (NEW → ACCEPTED)
-6. **Kitchen Service**: Start preparation (ACCEPTED → IN_PROGRESS)
-7. **Kitchen Service**: Mark as ready (IN_PROGRESS → READY) → **Email sent!** 📧
-8. **Kitchen Service**: Deliver to service (READY → DELIVERED_TO_SERVICE)
+4. **Billing Service** (automatic): Bill created via Kafka event (10% tax added)
+5. **Kitchen Service** (automatic): Kitchen ticket created via Kafka event
+6. **Kitchen Service**: Accept ticket (NEW → ACCEPTED)
+7. **Kitchen Service**: Start preparation (ACCEPTED → IN_PROGRESS)
+8. **Kitchen Service**: Mark as ready (IN_PROGRESS → READY) → **Email sent!** 📧
+9. **Kitchen Service**: Deliver to service (READY → DELIVERED_TO_SERVICE)
+10. **Billing Service**: Finalize bill (PENDING → PAID) with payment method
 
 ---
 
@@ -525,16 +580,17 @@ The collection uses these auto-populated variables:
 | `food_id` | Food item UUID | Create Food Item |
 | `order_id` | Order UUID | Create Order |
 | `kitchen_ticket_id` | Kitchen ticket UUID | Get Kitchen Ticket |
+| `bill_id` | Bill UUID | Get Bill by Order ID |
 
 ---
 
 ## 🚀 Next Steps
 
-After testing the Kitchen Service, you can:
-1. Test the Billing Service (coming in Phase 6)
-2. View Kafka events in Kafka UI (http://localhost:8080)
-3. View analytics in ClickHouse
-4. Monitor email delivery logs
+After testing all services, you can:
+1. View Kafka events in Kafka UI (http://localhost:8080)
+2. View analytics in ClickHouse
+3. Monitor email delivery logs
+4. Test the complete end-to-end workflow from order to payment
 
 ---
 

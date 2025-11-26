@@ -2,9 +2,10 @@
   "info": {
     "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "RestMan - Complete API Collection",
-    "description": "Complete API collection for RestMan microservices including Auth Service and Restaurant Service",
+    "description": "Complete API collection for RestMan - A microservices-based restaurant management system.\n\n**Services:**\n- Auth Service (Port 8001) - OTP-based authentication\n- Restaurant Service (Port 8002) - Restaurant and menu management  \n- Order Service (Port 8003) - Order placement and tracking\n- Kitchen Service (Port 8004) - Kitchen ticket management and email notifications\n- Billing Service (Port 8005) - Bill generation and payment processing\n\n**Total Endpoints:** 32\n\n**Getting Started:**\n1. Import this collection and the environment file\n2. Select \"RestMan - Complete Environment\"\n3. Update your email in environment variables\n4. Follow the workflow in POSTMAN_COMPLETE_GUIDE.md\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "restman-complete"
+    "_exporter_id": "restman-complete",
+    "_postman_exported_at": "2025-11-26T09:15:06.000Z"
   },
   "item": [
     {
@@ -762,7 +763,7 @@
                 "status"
               ]
             },
-            "description": "Accept the kitchen ticket (NEW → ACCEPTED)"
+            "description": "Accept the kitchen ticket (NEW \u2192 ACCEPTED)"
           },
           "response": []
         },
@@ -793,7 +794,7 @@
                 "status"
               ]
             },
-            "description": "Start preparing the order (ACCEPTED → IN_PROGRESS)"
+            "description": "Start preparing the order (ACCEPTED \u2192 IN_PROGRESS)"
           },
           "response": []
         },
@@ -824,7 +825,7 @@
                 "status"
               ]
             },
-            "description": "Mark order as ready (IN_PROGRESS → READY). This triggers an email notification to the user."
+            "description": "Mark order as ready (IN_PROGRESS \u2192 READY). This triggers an email notification to the user."
           },
           "response": []
         },
@@ -855,7 +856,140 @@
                 "status"
               ]
             },
-            "description": "Mark order as delivered to delivery service (READY → DELIVERED_TO_SERVICE)"
+            "description": "Mark order as delivered to delivery service (READY \u2192 DELIVERED_TO_SERVICE)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Billing Service",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{billing_base_url}}/api/health",
+              "host": [
+                "{{billing_base_url}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Check if the billing service is healthy"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bill by Order ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('bill_id', jsonData.id);",
+                  "    console.log('Bill ID saved:', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{billing_base_url}}/api/billing/orders/{{order_id}}",
+              "host": [
+                "{{billing_base_url}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": "Get bill for a specific order"
+          },
+          "response": []
+        },
+        {
+          "name": "Finalize Bill (Mark as Paid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"card\"\n}"
+            },
+            "url": {
+              "raw": "{{billing_base_url}}/api/billing/orders/{{order_id}}/finalize",
+              "host": [
+                "{{billing_base_url}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "orders",
+                "{{order_id}}",
+                "finalize"
+              ]
+            },
+            "description": "Finalize bill and mark as paid with payment method"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Bills",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{billing_base_url}}/api/billing/users/{{user_id}}",
+              "host": [
+                "{{billing_base_url}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Get all bills for a specific user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Restaurant Bills",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{billing_base_url}}/api/billing/restaurants/{{restaurant_id}}",
+              "host": [
+                "{{billing_base_url}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "restaurants",
+                "{{restaurant_id}}"
+              ]
+            },
+            "description": "Get all bills for a specific restaurant"
           },
           "response": []
         }
