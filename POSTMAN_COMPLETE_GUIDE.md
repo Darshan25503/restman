@@ -8,6 +8,7 @@ This Postman collection provides complete API testing for the RestMan microservi
 - **Order Service** (Port 8003) - Order placement and tracking
 - **Kitchen Service** (Port 8004) - Kitchen ticket management and email notifications
 - **Billing Service** (Port 8005) - Bill generation and payment processing
+- **Analytics Service** (Port 8006) - Real-time analytics and reporting with ClickHouse
 
 ## 🚀 Quick Start
 
@@ -550,20 +551,102 @@ When you create an order in the Order Service:
 
 ---
 
+### Phase 7: Analytics Service
+
+The Analytics Service consumes events from Kafka and stores data in ClickHouse for real-time analytics.
+
+#### Step 1: Health Check
+- **Endpoint**: `Analytics Service > Health Check`
+- **Action**: Click "Send"
+- **Expected**: `200 OK` with service status
+
+#### Step 2: Get Top Foods
+- **Endpoint**: `Analytics Service > Get Top Foods`
+- **Query Params**: `limit=10` (optional, default: 10)
+- **Action**: Click "Send"
+- **Expected**: List of top food items by quantity sold
+- **Response Example**:
+```json
+[
+  {
+    "food_id": "uuid",
+    "food_name": "Margherita Pizza",
+    "total_quantity": 25,
+    "total_revenue": "375.00"
+  }
+]
+```
+
+#### Step 3: Get Revenue Summary
+- **Endpoint**: `Analytics Service > Get Revenue Summary`
+- **Action**: Click "Send"
+- **Expected**: Revenue statistics
+- **Response Example**:
+```json
+{
+  "total_revenue": "1250.50",
+  "total_orders": 15,
+  "average_order_value": "83.37"
+}
+```
+
+#### Step 4: Get Orders By Status
+- **Endpoint**: `Analytics Service > Get Orders By Status`
+- **Action**: Click "Send"
+- **Expected**: Order distribution by status
+- **Response Example**:
+```json
+[
+  {
+    "status": "PENDING",
+    "count": 5
+  },
+  {
+    "status": "COMPLETED",
+    "count": 10
+  }
+]
+```
+
+#### Step 5: Get Restaurant Top Foods
+- **Endpoint**: `Analytics Service > Get Restaurant Top Foods`
+- **Path Params**: Uses `{{restaurant_id}}` from environment
+- **Query Params**: `limit=10` (optional)
+- **Action**: Click "Send"
+- **Expected**: Top foods for the specific restaurant
+- **Response Example**:
+```json
+[
+  {
+    "food_id": "uuid",
+    "food_name": "Pepperoni Pizza",
+    "total_quantity": 15,
+    "total_revenue": "225.00"
+  }
+]
+```
+
+**Note**: Analytics data is populated automatically via Kafka events when orders are placed and bills are generated. Create some orders first to see analytics data.
+
+---
+
 ## 🔄 Complete End-to-End Workflow
 
-Here's the complete flow from authentication to order delivery and payment:
+Here's the complete flow from authentication to order delivery, payment, and analytics:
 
 1. **Auth Service**: Request OTP → Verify OTP (get session token)
 2. **Restaurant Service**: Create Restaurant → Create Category → Create Food Item
 3. **Order Service**: Create Order (auto-saves order_id)
 4. **Billing Service** (automatic): Bill created via Kafka event (10% tax added)
 5. **Kitchen Service** (automatic): Kitchen ticket created via Kafka event
-6. **Kitchen Service**: Accept ticket (NEW → ACCEPTED)
-7. **Kitchen Service**: Start preparation (ACCEPTED → IN_PROGRESS)
-8. **Kitchen Service**: Mark as ready (IN_PROGRESS → READY) → **Email sent!** 📧
-9. **Kitchen Service**: Deliver to service (READY → DELIVERED_TO_SERVICE)
-10. **Billing Service**: Finalize bill (PENDING → PAID) with payment method
+6. **Analytics Service** (automatic): Order and items stored in ClickHouse via Kafka event
+7. **Kitchen Service**: Accept ticket (NEW → ACCEPTED)
+8. **Kitchen Service**: Start preparation (ACCEPTED → IN_PROGRESS)
+9. **Kitchen Service**: Mark as ready (IN_PROGRESS → READY) → **Email sent!** 📧
+10. **Kitchen Service**: Deliver to service (READY → DELIVERED_TO_SERVICE)
+11. **Billing Service**: Finalize bill (PENDING → PAID) with payment method
+12. **Analytics Service** (automatic): Bill payment stored in ClickHouse via Kafka event
+13. **Analytics Service**: View analytics (top foods, revenue, order status distribution)
 
 ---
 
@@ -588,9 +671,10 @@ The collection uses these auto-populated variables:
 
 After testing all services, you can:
 1. View Kafka events in Kafka UI (http://localhost:8080)
-2. View analytics in ClickHouse
-3. Monitor email delivery logs
-4. Test the complete end-to-end workflow from order to payment
+2. Query ClickHouse directly for raw analytics data (http://localhost:8124)
+3. Monitor email delivery logs in Kitchen Service
+4. Test the complete end-to-end workflow from authentication to analytics
+5. Create multiple orders to see meaningful analytics data
 
 ---
 
