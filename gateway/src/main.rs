@@ -72,6 +72,13 @@ async fn main() -> std::io::Result<()> {
             .wrap(auth_middleware.clone())
             .app_data(proxy_service_data.clone())
             .route("/health", web::get().to(handlers::health_check))
+            // Explicit health check routes for each service
+            .route("/api/auth/health", web::get().to(handlers::auth_health))
+            .route("/api/restaurants/health", web::get().to(handlers::restaurant_health))
+            .route("/api/orders/health", web::get().to(handlers::order_health))
+            .route("/api/kitchen/health", web::get().to(handlers::kitchen_health))
+            .route("/api/billing/health", web::get().to(handlers::billing_health))
+            .route("/api/analytics/health", web::get().to(handlers::analytics_health))
             .default_service(web::to(handlers::proxy_handler))
     })
     .bind((server_host.as_str(), server_port))?

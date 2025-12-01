@@ -118,5 +118,54 @@ impl ProxyService {
 
         Ok(client_resp.body(body))
     }
+
+    pub async fn proxy_health_check(
+        &self,
+        service_name: &str,
+        health_path: &str,
+    ) -> Result<HttpResponse, actix_web::Error> {
+        let base_url = self
+            .service_urls
+            .get(service_name)
+            .ok_or_else(|| actix_web::error::ErrorNotFound("Service not found"))?;
+
+        let target_url = format!("{}{}", base_url, health_path);
+
+        tracing::debug!("Health check for {} at {}", service_name, target_url);
+
+        // Send GET request to health endpoint
+        let backend_resp = self
+            .client
+            .get(&target_url)
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to reach {} health endpoint: {}", service_name, e);
+                actix_web::error::ErrorBadGateway(format!("Failed to reach {} service", service_name))
+            })?;
+
+        // Build response
+        let status = backend_resp.status();
+        let mut client_resp = HttpResponse::build(status);
+
+        // Forward response headers
+        for (key, value) in backend_resp.headers().iter() {
+            let key_str = key.as_str();
+            if key_str != "connection" && key_str != "transfer-encoding" {
+                client_resp.insert_header((key.clone(), value.clone()));
+            }
+        }
+
+        // Get response body
+        let body = backend_resp
+            .bytes()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to read health response from {}: {}", service_name, e);
+                actix_web::error::ErrorBadGateway("Failed to read response from backend service")
+            })?;
+
+        Ok(client_resp.body(body))
+    }
 }
 

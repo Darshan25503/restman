@@ -39,13 +39,17 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to create database pool");
 
-    // Run migrations
-    tracing::info!("Running database migrations...");
-    sqlx::migrate!("./migrations")
-        .set_locking(false) // Disable advisory locks for CockroachDB compatibility
-        .run(&db_pool)
-        .await
-        .expect("Failed to run migrations");
+    // Run migrations (skip if SKIP_MIGRATIONS is set)
+    if std::env::var("SKIP_MIGRATIONS").is_err() {
+        tracing::info!("Running database migrations...");
+        sqlx::migrate!("./migrations")
+            .set_locking(false) // Disable advisory locks for CockroachDB compatibility
+            .run(&db_pool)
+            .await
+            .expect("Failed to run migrations");
+    } else {
+        tracing::info!("Skipping database migrations (SKIP_MIGRATIONS is set)");
+    }
 
     // Create Redis connection manager
     let redis_manager = db_utils::create_redis_client(&config.redis.url)
