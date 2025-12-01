@@ -2,13 +2,24 @@
 
 ## 📦 Overview
 
-This Postman collection provides complete API testing for the RestMan microservices platform, including:
-- **Auth Service** (Port 8001) - OTP-based authentication
-- **Restaurant Service** (Port 8002) - Restaurant and menu management
-- **Order Service** (Port 8003) - Order placement and tracking
-- **Kitchen Service** (Port 8004) - Kitchen ticket management and email notifications
-- **Billing Service** (Port 8005) - Bill generation and payment processing
-- **Analytics Service** (Port 8006) - Real-time analytics and reporting with ClickHouse
+This Postman collection provides complete API testing for the RestMan microservices platform via the **API Gateway (Port 8000)**.
+
+### Architecture
+All requests go through the **API Gateway** which routes to the appropriate backend service:
+- **API Gateway** (Port 8000) - Single entry point with authentication middleware
+  - Routes to **Auth Service** (Port 8001) - OTP-based authentication
+  - Routes to **Restaurant Service** (Port 8002) - Restaurant and menu management
+  - Routes to **Order Service** (Port 8003) - Order placement and tracking
+  - Routes to **Kitchen Service** (Port 8004) - Kitchen ticket management and email notifications
+  - Routes to **Billing Service** (Port 8005) - Bill generation and payment processing
+  - Routes to **Analytics Service** (Port 8006) - Real-time analytics and reporting with ClickHouse
+
+### Benefits of Using API Gateway
+- ✅ Single entry point for all services
+- ✅ Centralized authentication and session validation
+- ✅ Simplified client configuration
+- ✅ Consistent error handling
+- ✅ Future-proof for rate limiting, logging, and monitoring
 
 ## 🚀 Quick Start
 
@@ -22,14 +33,24 @@ Import both files into Postman:
 
 In Postman, select **"RestMan - Complete Environment"** from the environment dropdown (top-right corner).
 
-### 3. Update Your Email
+### 3. Verify Environment Variables
+
+The environment includes the following key variables:
+- **`gateway_base_url`**: `http://localhost:8000` - API Gateway endpoint (all requests use this)
+- **`user_email`**: Change this to your actual email address for OTP testing
+- **Direct service URLs** (for reference only, not used in collection):
+  - `auth_base_url`, `restaurant_base_url`, `order_base_url`, etc.
+
+**Important**: All API requests in the collection now use `{{gateway_base_url}}` (port 8000) instead of individual service URLs.
+
+### 4. Update Your Email
 
 In the environment variables, change `user_email` to your actual email address:
 - Click the environment name
 - Edit `user_email` value
 - Save
 
-### 4. Start Testing!
+### 5. Start Testing!
 
 Follow the workflow below to test the complete system.
 
@@ -664,6 +685,61 @@ The collection uses these auto-populated variables:
 | `order_id` | Order UUID | Create Order |
 | `kitchen_ticket_id` | Kitchen ticket UUID | Get Kitchen Ticket |
 | `bill_id` | Bill UUID | Get Bill by Order ID |
+
+---
+
+## 🌐 API Gateway Details
+
+### What is the API Gateway?
+
+The API Gateway is a single entry point that:
+- **Routes requests** to the appropriate backend service based on the URL path
+- **Validates authentication** for protected endpoints using Redis session store
+- **Forwards headers and body** to backend services
+- **Returns responses** from backend services to the client
+
+### Request Flow
+
+```
+Client → API Gateway (Port 8000) → Auth Middleware → Proxy → Backend Service → Response
+```
+
+### Path-Based Routing
+
+| Path Pattern | Target Service | Port |
+|-------------|----------------|------|
+| `/api/auth/*` | Auth Service | 8001 |
+| `/api/restaurants/*`, `/api/categories/*`, `/api/foods/*` | Restaurant Service | 8002 |
+| `/api/orders/*` | Order Service | 8003 |
+| `/api/kitchen/*` | Kitchen Service | 8004 |
+| `/api/billing/*` | Billing Service | 8005 |
+| `/api/analytics/*` | Analytics Service | 8006 |
+
+### Authentication Middleware
+
+- **Public Endpoints** (no authentication required):
+  - `/api/auth/*` - All authentication endpoints
+  - `*/health` - All health check endpoints
+
+- **Protected Endpoints** (require `Authorization: Bearer <token>` header):
+  - All other endpoints
+  - Returns `401 Unauthorized` if token is missing or invalid
+
+### Environment Variables
+
+The gateway can be configured using environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GATEWAY_HOST` | 0.0.0.0 | Gateway server host |
+| `GATEWAY_PORT` | 8000 | Gateway server port |
+| `REDIS_URL` | redis://localhost:6379 | Redis connection URL |
+| `AUTH_SERVICE_URL` | http://localhost:8001 | Auth service URL |
+| `RESTAURANT_SERVICE_URL` | http://localhost:8002 | Restaurant service URL |
+| `ORDER_SERVICE_URL` | http://localhost:8003 | Order service URL |
+| `KITCHEN_SERVICE_URL` | http://localhost:8004 | Kitchen service URL |
+| `BILLING_SERVICE_URL` | http://localhost:8005 | Billing service URL |
+| `ANALYTICS_SERVICE_URL` | http://localhost:8006 | Analytics service URL |
 
 ---
 

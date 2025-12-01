@@ -2,10 +2,10 @@
   "info": {
     "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "RestMan - Complete API Collection",
-    "description": "Complete API collection for RestMan - A microservices-based restaurant management system.\n\n**Services:**\n- Auth Service (Port 8001) - OTP-based authentication\n- Restaurant Service (Port 8002) - Restaurant and menu management  \n- Order Service (Port 8003) - Order placement and tracking\n- Kitchen Service (Port 8004) - Kitchen ticket management and email notifications\n- Billing Service (Port 8005) - Bill generation and payment processing\n- Analytics Service (Port 8006) - Real-time analytics and reporting with ClickHouse\n\n**Total Endpoints:** 37\n\n**Getting Started:**\n1. Import this collection and the environment file\n2. Select \"RestMan - Complete Environment\"\n3. Update your email in environment variables\n4. Follow the workflow in POSTMAN_COMPLETE_GUIDE.md\n",
+    "description": "Complete API collection for RestMan via API Gateway (Port 8000) - A microservices-based restaurant management system.\n\n**Services:**\n- Auth Service (Port 8001) - OTP-based authentication\n- Restaurant Service (Port 8002) - Restaurant and menu management  \n- Order Service (Port 8003) - Order placement and tracking\n- Kitchen Service (Port 8004) - Kitchen ticket management and email notifications\n- Billing Service (Port 8005) - Bill generation and payment processing\n- Analytics Service (Port 8006) - Real-time analytics and reporting with ClickHouse\n\n**Total Endpoints:** 37\n\n**Getting Started:**\n1. Import this collection and the environment file\n2. Select \"RestMan - Complete Environment\"\n3. Update your email in environment variables\n4. Follow the workflow in POSTMAN_COMPLETE_GUIDE.md\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "restman-complete",
-    "_postman_exported_at": "2025-11-26T09:15:06.000Z"
+    "_postman_exported_at": "2025-12-01T09:35:00.000Z"
   },
   "item": [
     {
@@ -17,9 +17,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{auth_base_url}}/api/auth/health",
+              "raw": "{{gateway_base_url}}/api/auth/health",
               "host": [
-                "{{auth_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -59,9 +59,9 @@
               "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"role\": \"rest\"\n}"
             },
             "url": {
-              "raw": "{{auth_base_url}}/api/auth/request-otp",
+              "raw": "{{gateway_base_url}}/api/auth/request-otp",
               "host": [
-                "{{auth_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -104,9 +104,9 @@
               "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"otp\": \"123456\"\n}"
             },
             "url": {
-              "raw": "{{auth_base_url}}/api/auth/verify-otp",
+              "raw": "{{gateway_base_url}}/api/auth/verify-otp",
               "host": [
-                "{{auth_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -132,9 +132,9 @@
               "raw": "{\n  \"session_token\": \"{{session_token}}\"\n}"
             },
             "url": {
-              "raw": "{{auth_base_url}}/api/auth/logout",
+              "raw": "{{gateway_base_url}}/api/auth/logout",
               "host": [
-                "{{auth_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -156,9 +156,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{restaurant_base_url}}/api/health",
+              "raw": "{{gateway_base_url}}/api/health",
               "host": [
-                "{{restaurant_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -202,9 +202,9 @@
               "raw": "{\n  \"name\": \"Pizza Palace\",\n  \"description\": \"Best pizza in town\",\n  \"address\": \"123 Main St, New York, NY\",\n  \"phone\": \"+1-555-1234\"\n}"
             },
             "url": {
-              "raw": "{{restaurant_base_url}}/api/restaurants",
+              "raw": "{{gateway_base_url}}/api/restaurants",
               "host": [
-                "{{restaurant_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -225,9 +225,9 @@
               }
             ],
             "url": {
-              "raw": "{{restaurant_base_url}}/api/restaurants/my",
+              "raw": "{{gateway_base_url}}/api/restaurants/my",
               "host": [
-                "{{restaurant_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -272,9 +272,9 @@
               "raw": "{\n  \"name\": \"Pizzas\",\n  \"description\": \"Our delicious pizzas\",\n  \"display_order\": 1\n}"
             },
             "url": {
-              "raw": "{{restaurant_base_url}}/api/restaurants/{{restaurant_id}}/categories",
+              "raw": "{{gateway_base_url}}/api/restaurants/{{restaurant_id}}/categories",
               "host": [
-                "{{restaurant_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -320,9 +320,9 @@
               "raw": "{\n  \"category_id\": \"{{category_id}}\",\n  \"name\": \"Margherita Pizza\",\n  \"description\": \"Classic pizza with tomato sauce, mozzarella, and basil\",\n  \"price\": \"12.99\",\n  \"is_available\": true\n}"
             },
             "url": {
-              "raw": "{{restaurant_base_url}}/api/restaurants/{{restaurant_id}}/foods",
+              "raw": "{{gateway_base_url}}/api/restaurants/{{restaurant_id}}/foods",
               "host": [
-                "{{restaurant_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -340,9 +340,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{restaurant_base_url}}/api/restaurants/{{restaurant_id}}/menu",
+              "raw": "{{gateway_base_url}}/api/restaurants/{{restaurant_id}}/menu",
               "host": [
-                "{{restaurant_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -366,9 +366,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{order_base_url}}/api/health",
+              "raw": "{{gateway_base_url}}/api/health",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -415,9 +415,9 @@
               "raw": "{\n  \"restaurant_id\": \"{{restaurant_id}}\",\n  \"items\": [\n    {\n      \"food_id\": \"{{food_id}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"delivery_address\": \"123 Main St, Apt 4B, New York, NY 10001\",\n  \"special_instructions\": \"Extra cheese please, ring doorbell twice\"\n}"
             },
             "url": {
-              "raw": "{{order_base_url}}/api/orders",
+              "raw": "{{gateway_base_url}}/api/orders",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -440,9 +440,9 @@
               }
             ],
             "url": {
-              "raw": "{{order_base_url}}/api/orders/{{order_id}}",
+              "raw": "{{gateway_base_url}}/api/orders/{{order_id}}",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -466,9 +466,9 @@
               }
             ],
             "url": {
-              "raw": "{{order_base_url}}/api/orders",
+              "raw": "{{gateway_base_url}}/api/orders",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -494,9 +494,9 @@
               "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
             },
             "url": {
-              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "raw": "{{gateway_base_url}}/api/orders/{{order_id}}/status",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -524,9 +524,9 @@
               "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
             },
             "url": {
-              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "raw": "{{gateway_base_url}}/api/orders/{{order_id}}/status",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -554,9 +554,9 @@
               "raw": "{\n  \"status\": \"READY\"\n}"
             },
             "url": {
-              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "raw": "{{gateway_base_url}}/api/orders/{{order_id}}/status",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -584,9 +584,9 @@
               "raw": "{\n  \"status\": \"COMPLETED\"\n}"
             },
             "url": {
-              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "raw": "{{gateway_base_url}}/api/orders/{{order_id}}/status",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -614,9 +614,9 @@
               "raw": "{\n  \"status\": \"CANCELLED\"\n}"
             },
             "url": {
-              "raw": "{{order_base_url}}/api/orders/{{order_id}}/status",
+              "raw": "{{gateway_base_url}}/api/orders/{{order_id}}/status",
               "host": [
-                "{{order_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -640,9 +640,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{kitchen_base_url}}/api/health",
+              "raw": "{{gateway_base_url}}/api/health",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -659,9 +659,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{kitchen_base_url}}/api/kitchen/tickets",
+              "raw": "{{gateway_base_url}}/api/kitchen/tickets",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -679,9 +679,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{kitchen_base_url}}/api/kitchen/tickets?status=NEW",
+              "raw": "{{gateway_base_url}}/api/kitchen/tickets?status=NEW",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -721,9 +721,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}",
+              "raw": "{{gateway_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -751,9 +751,9 @@
               "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
             },
             "url": {
-              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "raw": "{{gateway_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -782,9 +782,9 @@
               "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
             },
             "url": {
-              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "raw": "{{gateway_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -813,9 +813,9 @@
               "raw": "{\n  \"status\": \"READY\"\n}"
             },
             "url": {
-              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "raw": "{{gateway_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -844,9 +844,9 @@
               "raw": "{\n  \"status\": \"DELIVERED_TO_SERVICE\"\n}"
             },
             "url": {
-              "raw": "{{kitchen_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
+              "raw": "{{gateway_base_url}}/api/kitchen/tickets/{{kitchen_ticket_id}}/status",
               "host": [
-                "{{kitchen_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -871,9 +871,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{billing_base_url}}/api/health",
+              "raw": "{{gateway_base_url}}/api/health",
               "host": [
-                "{{billing_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -905,9 +905,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{billing_base_url}}/api/billing/orders/{{order_id}}",
+              "raw": "{{gateway_base_url}}/api/billing/orders/{{order_id}}",
               "host": [
-                "{{billing_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -935,9 +935,9 @@
               "raw": "{\n  \"payment_method\": \"card\"\n}"
             },
             "url": {
-              "raw": "{{billing_base_url}}/api/billing/orders/{{order_id}}/finalize",
+              "raw": "{{gateway_base_url}}/api/billing/orders/{{order_id}}/finalize",
               "host": [
-                "{{billing_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -957,9 +957,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{billing_base_url}}/api/billing/users/{{user_id}}",
+              "raw": "{{gateway_base_url}}/api/billing/users/{{user_id}}",
               "host": [
-                "{{billing_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -978,9 +978,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{billing_base_url}}/api/billing/restaurants/{{restaurant_id}}",
+              "raw": "{{gateway_base_url}}/api/billing/restaurants/{{restaurant_id}}",
               "host": [
-                "{{billing_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -1004,9 +1004,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{analytics_base_url}}/api/health",
+              "raw": "{{gateway_base_url}}/api/health",
               "host": [
-                "{{analytics_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -1023,9 +1023,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{analytics_base_url}}/api/analytics/top-foods?limit=10",
+              "raw": "{{gateway_base_url}}/api/analytics/top-foods?limit=10",
               "host": [
-                "{{analytics_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -1050,9 +1050,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{analytics_base_url}}/api/analytics/revenue",
+              "raw": "{{gateway_base_url}}/api/analytics/revenue",
               "host": [
-                "{{analytics_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -1070,9 +1070,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{analytics_base_url}}/api/analytics/orders-by-status",
+              "raw": "{{gateway_base_url}}/api/analytics/orders-by-status",
               "host": [
-                "{{analytics_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
@@ -1090,9 +1090,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{analytics_base_url}}/api/analytics/restaurants/{{restaurant_id}}/top-foods?limit=10",
+              "raw": "{{gateway_base_url}}/api/analytics/restaurants/{{restaurant_id}}/top-foods?limit=10",
               "host": [
-                "{{analytics_base_url}}"
+                "{{gateway_base_url}}"
               ],
               "path": [
                 "api",
