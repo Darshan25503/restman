@@ -438,7 +438,7 @@ MIT License - See LICENSE file for details
 
 ## 👥 Authors
 
-Restaurant Management Team
+Darshan Bhensdadia
 
 ## 🤝 Contributing
 
